@@ -1,73 +1,91 @@
-// Custom hooks for task management
 "use client";
 
-import useSWR from "swr";
-import type { Task } from "./types";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios'; 
+import type { Task } from "./types"; 
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+// --- 1. Hook para BUSCAR Tarefas (GET) ---
 
-export function useTasks(userId: string | null, status?: string) {
-  const query = new URLSearchParams();
-  if (userId) query.append("userId", userId);
-  if (status) query.append("status", status);
+const getTasks = async (userId: string | null, status?: string): Promise<Task[]> => {
 
-  const { data, error, isLoading, mutate } = useSWR(
-    userId ? `/api/tasks?${query.toString()}` : null,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-    }
-  );
-
-  return {
-    tasks: data || [],
-    isLoading,
-    error,
-    mutate,
-  };
-}
-
-export async function createTaskAction(
-  userId: string,
-  title: string,
-  description: string,
-  dueDate: string
-) {
-  const res = await fetch("/api/tasks", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, title, description, dueDate }),
+  const { data } = await axios.get('/api/tasks', {
+    params: { userId, status } 
   });
+  return data;
+};
 
-  if (!res.ok) {
-    throw new Error("Erro ao criar tarefa");
-  }
+export const useGetTasks = (userId: string | null, status?: string) => {
+  const queryKey = ['tasks', { userId, status }];
 
-  return res.json();
-}
-
-export async function updateTaskAction(taskId: string, updates: Partial<Task>) {
-  const res = await fetch(`/api/tasks/${taskId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updates),
+  return useQuery<Task[], Error>({
+    queryKey: queryKey,
+    queryFn: () => getTasks(userId, status),
+    enabled: !!userId,
+    refetchOnWindowFocus: false,
   });
+};
 
-  if (!res.ok) {
-    throw new Error("Erro ao atualizar tarefa");
-  }
+// --- 2. Hook para CRIAR Tarefa (POST) ---
 
-  return res.json();
-}
+type CreateTaskInput = {
+  userId: string;
+  title: string;
+  description: string;
+  dueDate: string;
+};
 
-export async function deleteTaskAction(taskId: string) {
-  const res = await fetch(`/api/tasks/${taskId}`, {
-    method: "DELETE",
+const createTask = async (taskInput: CreateTaskInput): Promise<Task> => {
+  // O axios.post já converte 'taskInput' para JSON automaticamente
+  const { data } = await axios.post('/api/tasks', taskInput);
+  return data;
+};
+
+export const useCreateTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation<Task, Error, CreateTaskInput>({
+    mutationFn: createTask,
+    onSuccess: () => {
+      // Invalida o cache ['tasks'] para atualizar a lista
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
   });
+};
 
-  if (!res.ok) {
-    throw new Error("Erro ao deletar tarefa");
-  }
+// --- 3. Hook para ATUALIZAR Tarefa (PATCH) ---
 
-  return res.json();
-}
+type UpdateTaskInput = {
+  taskId: string;
+  updates: Partial<Task>;
+};
+
+const updateTask = async ({ taskId, updates }: UpdateTaskInput): Promise<Task> => {
+  const { data } = await axios.patch(`/api/tasks/${taskId}`, updates);
+  return data;
+};
+
+export const useUpdateTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation<Task, Error, UpdateTaskInput>({
+    mutationFn: updateTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
+
+// --- 4. Hook para DELETAR Tarefa (DELETE) ---
+
+const deleteTask = async (taskId: string): Promise<any> => {
+  const { data } = await axios.delete(`/api/tasks/${taskId}`);
+  return data;
+};
+
+export const useDeleteTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: deleteTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
