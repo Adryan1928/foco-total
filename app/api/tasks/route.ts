@@ -30,13 +30,20 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { userId, title, description, dueDate } = body;
 
+  
+    console.log("---------------------------------");
+    console.log("RECEBIDO NA API (POST):", body);
+    console.log("TENTANDO CRIAR TASK COM userId:", userId);
+    console.log("---------------------------------");
+   
+
     if (!userId || !title) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     const newTask = await prisma.task.create({
       data: {
-        userId, // não precisa usar ObjectId
+        userId, 
         title,
         description: description || "",
         dueDate: dueDate ? new Date(dueDate) : null,
@@ -46,7 +53,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(newTask, { status: 201 });
   } catch (err) {
-    console.error("Erro POST /tasks:", err);
+    // Log do erro completo para o terminal
+    console.error("ERRO COMPLETO DO PRISMA (POST):", err);
     return NextResponse.json(
       { error: "Failed to create task" },
       { status: 500 }
