@@ -37,9 +37,8 @@ export function CreateTaskForm({ onTaskCreated }: CreateTaskFormProps) {
   } = useForm<TaskFormData>()
 
   const onSubmit = async (data: TaskFormData) => {
-    console.log("Submitting form with data:", data);
     if (!user) return
-    console.log(data)
+    
     setApiError("")
     setSucess(false)
 
@@ -103,13 +102,17 @@ export function CreateTaskForm({ onTaskCreated }: CreateTaskFormProps) {
               {...register("dueDate", {
                 validate: (value) => {
                 if (!value) return true;
-                const selectedDate = new Date(value);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return selectedDate >= today || "A data não pode ser no passado";
+                const selectedDate = new Date(value + "T23:59:59").getTime();
+                const today = new Date().getTime();
+                return selectedDate > today || "A data não pode ser no passado";
                 }
               })}
+              
             />
+
+            {errors.dueDate && (
+              <span className="text-xs text-red-500">{errors.dueDate.message}</span>
+            )}
           </div>
 
           {apiError && (
