@@ -3,8 +3,9 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-import { AuthProvider } from "@/lib/auth-context"
+import { AuthProvider } from "@/hooks/auth"
 import { ThemeProvider } from "@/lib/theme-context"
+import ReactQueryProvider from "@/lib/react-query-provider";
 
 const _inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -40,7 +41,11 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${_inter.variable} font-sans antialiased`}>
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <ReactQueryProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ReactQueryProvider>
         </ThemeProvider>
         <Analytics />
       </body>
