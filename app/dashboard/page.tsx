@@ -1,31 +1,33 @@
-"use client"
-import { useAuth } from "@/hooks/auth"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { TaskHeader } from "@/components/task-header"
-import { CreateTaskForm } from "@/components/create-task-form"
-import { TaskList } from "@/components/task-list"
+"use client";
+import { useAuth } from "@/hooks/auth";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { TaskHeader } from "@/components/task-header";
+import { CreateTaskForm } from "@/components/create-task-form";
+import { TaskList } from "@/components/task-list";
 
 export default function DashboardPage() {
-  const { user,  isLoading } = useAuth()
-  const router = useRouter()
+  const [reload, setReload] = useState(0);
+
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/login")
+      router.push("/login");
     }
-  }, [isLoading, user, router])
+  }, [isLoading, user, router]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
@@ -35,14 +37,14 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <CreateTaskForm />
+            <CreateTaskForm onTaskCreated={() => setReload((n) => n + 1)} />
           </div>
 
           <div className="lg:col-span-2">
-            <TaskList />
+            <TaskList userId={user.id} reload={reload} />
           </div>
         </div>
       </main>
     </div>
-  )
+  );
 }
