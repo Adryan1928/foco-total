@@ -1,0 +1,8 @@
+node_modules
+.next
+.next/cache
+.git
+Dockerfile*
+**/*.log
+.env*
+prisma/dev.db-journal
