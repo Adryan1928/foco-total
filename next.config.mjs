@@ -5,7 +5,6 @@ const nextConfig = {
     devIndicators: false,
     experimental: {
         authInterrupts: true,
-        turbo: false
     },
     webpack: (config, { isServer }) => {
         if (isServer) {
