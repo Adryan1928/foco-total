@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
     const safeUser = { id: user.id, email: user.email, name: user.name };
 
-    const res = NextResponse.json({ user: safeUser }, { status: 200 });
+    const res = NextResponse.json({ user: safeUser, token }, { status: 200 });
     res.cookies.set({
       name: "token",
       value: token,
